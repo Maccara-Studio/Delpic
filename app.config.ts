@@ -28,7 +28,20 @@ const config: ExpoConfig = {
   web: {
     favicon: "./assets/favicon.png",
   },
-  plugins: ["expo-router", "expo-status-bar"],
+  plugins: [
+    "expo-router",
+    "expo-status-bar",
+    "expo-image",
+    [
+      "expo-media-library",
+      {
+        photosPermission: "Delpic needs access to your photos and videos so you can review and declutter them.",
+        savePhotosPermission: "Delpic uses this permission to manage library changes when you confirm a batch deletion.",
+        isAccessMediaLocationEnabled: false,
+        granularPermissions: ["photo", "video"],
+      },
+    ],
+  ],
 };
 
 export default config;

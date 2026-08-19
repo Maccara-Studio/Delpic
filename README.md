@@ -4,7 +4,7 @@ A photo & video decluttering app: swipe right to keep, swipe left to stage for d
 
 Built with Expo (React Native), Expo Router, Reanimated + Gesture Handler, Zustand + MMKV, expo-media-library, expo-video, and RevenueCat.
 
-See [PREREQUISITES.md](./PREREQUISITES.md) first if this is your first time setting up the project.
+See [PREREQUISITES.md](./PREREQUISITES.md) first if this is your first time setting up the project. See [ARCHITECTURE.md](./ARCHITECTURE.md) for a map of what each file/folder is, and [DEVLOG.md](./DEVLOG.md) for a running log of what's been built per milestone and the problems hit along the way.
 
 ## First-time setup
 
@@ -70,6 +70,9 @@ and connect from the installed dev client.
 - **Gradle build fails with SSL/certificate errors** (`PKIX path building failed`, etc.) — usually caused by antivirus software intercepting HTTPS. See the "Antivirus HTTPS scanning" section in [PREREQUISITES.md](./PREREQUISITES.md).
 - **Gradle build fails on a CMake/native "configureCMakeDebug" step with a "restricted method" warning** — you're building with too new a JDK (25). See the JDK 17 section in [PREREQUISITES.md](./PREREQUISITES.md), and check `android/gradle/gradle-daemon-jvm.properties` doesn't have `toolchainVersion=25`.
 - **"Which build do I need to redo?"** — JS-only change: no rebuild, just reload. New native dependency, changed native config (permissions, plugins, app icon, splash): rebuild with `npm run android` (or a new EAS build for iOS).
+- **Just added a config plugin (new permissions, etc.) but the app doesn't reflect it** — the incremental prebuild that `npm run android` runs doesn't always merge new plugin output into an already-generated `android/` project. Delete the `android/` folder (and `ios/` if present — both are gitignored, fully regenerated) and rebuild to force a clean regeneration.
+- **App shows a persistent blank white screen** — usually means Metro isn't actually reachable, even if a terminal window looks like it's still running. Check `Invoke-WebRequest http://localhost:8081/status` actually responds; if it hangs/errors, the Metro process likely died silently — kill stray `node` processes and restart with `npm start`.
+- **Testing the permission flow again after it was already granted** — revoke it without digging through phone settings: `adb shell pm revoke com.delpic.app android.permission.READ_MEDIA_IMAGES`, same for `READ_MEDIA_VIDEO`, then `adb shell am force-stop com.delpic.app` and reopen the app.
 
 ## Type-checking & linting
 
