@@ -2,7 +2,8 @@ import type { ExpoConfig } from "expo/config";
 
 const config: ExpoConfig = {
   name: "Delpic",
-  slug: "Delpic",
+  slug: "delpic",
+  owner: "sam84723s-team",
   version: "1.0.0",
   scheme: "delpic",
   orientation: "portrait",
@@ -18,15 +19,19 @@ const config: ExpoConfig = {
   android: {
     package: "com.delpic.app",
     adaptiveIcon: {
-      backgroundColor: "#E6F4FE",
+      backgroundColor: "#dffcf7",
       foregroundImage: "./assets/android-icon-foreground.png",
       backgroundImage: "./assets/android-icon-background.png",
-      monochromeImage: "./assets/android-icon-monochrome.png",
     },
     predictiveBackGestureEnabled: false,
   },
   web: {
     favicon: "./assets/favicon.png",
+  },
+  extra: {
+    eas: {
+      projectId: "a0454b58-77c4-4572-933c-c844a3421bef",
+    },
   },
   plugins: [
     "expo-router",
@@ -34,6 +39,7 @@ const config: ExpoConfig = {
     "expo-image",
     "expo-splash-screen",
     "expo-video",
+    "expo-font",
     [
       "expo-media-library",
       {

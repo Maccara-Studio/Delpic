@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -90,7 +91,7 @@ export function SwipeDeck() {
       <View style={styles.header}>
         {canUndo ? (
           <Pressable onPress={undo} style={styles.backButton} hitSlop={12}>
-            <Text style={styles.backButtonText}>←</Text>
+            <Ionicons name="arrow-undo" size={20} color="#fff" />
           </Pressable>
         ) : (
           <View style={styles.backButtonPlaceholder} />
@@ -145,9 +146,5 @@ const styles = StyleSheet.create({
   backButtonPlaceholder: {
     width: 40,
     height: 40,
-  },
-  backButtonText: {
-    color: "#fff",
-    fontSize: 20,
   },
 });
