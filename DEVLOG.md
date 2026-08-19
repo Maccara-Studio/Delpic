@@ -91,3 +91,19 @@ Chronological record of what was done for each milestone, problems hit along the
 8. **Metro/adb reverse tunnel dropped after the adb daemon restarted mid-session** (unrelated trigger — running `adb logcat` after a period of inactivity respawned the daemon), breaking `localhost:8081` from the dev client. → `adb reverse tcp:8081 tcp:8081` re-establishes it; added to the README troubleshooting list as something to check whenever the dev client suddenly can't reach Metro after previously working.
 
 **Checkpoint:** Swiping right/left keeps/stages-for-trash with a colored border overlay tracking drag distance, spring physics feel snappy with no overshoot, consecutive rapid swipes (well under 100ms apart) are not throttled, Undo restores both the cursor and any trashed item, and progress/undo state persist correctly through a session reset. ✅
+
+---
+
+## Milestone 5 — Video engine
+
+**What was done**
+- Installed `expo-video` and added it to `app.config.ts`'s plugin list. Since this is a new native module, regenerated `android/` from scratch and rebuilt (`npx expo run:android`) rather than trusting an incremental prebuild, per the lesson learned in Milestone 2.
+- Added `src/components/deck/VideoCardPlayer.tsx`: wraps `useVideoPlayer`/`VideoView` from `expo-video`, looping, defaulting `muted` from `settingsSlice.muteByDefault`, auto-playing on creation only if `settingsSlice.autoplayVideos` is true, with a manual mute/unmute toggle button overlaid bottom-right.
+- Updated `CardMedia` to take an `isActive` prop: video assets only mount a real `VideoCardPlayer` when `isActive` (i.e. `stackPosition === 0`); buried/exiting video cards keep showing the static play-icon + duration placeholder from Milestone 3. `SwipeCard` passes `isActive={stackPosition === 0}`.
+- Deliberately did **not** add any new pause/lifecycle logic beyond this mount gating: since `completeSwipe` already advances the cursor immediately on release (Milestone 4), a swiped-away video card's `stackPosition` becomes `-1` (exiting) in the very same update, so `isActive` goes false and `VideoCardPlayer` unmounts — releasing the native player — right as the decision is made, satisfying "pause on decision" and "one video active at a time" for free from the existing architecture instead of needing an explicit play/pause effect keyed on swipe state.
+
+**Problems hit & fixes**
+
+1. Adding `expo-video`'s config plugin to an existing `android/` required a full regeneration (same class of issue as Milestone 2's manifest permissions) — deleted `android/` and rebuilt from scratch via `npx expo run:android` rather than risk an incomplete incremental prebuild.
+
+**Checkpoint:** Confirmed on-device — videos autoplay muted on the active card, the mute/unmute toggle works, and playback stops immediately on swipe (via unmount) with no audio bleed between cards. ✅

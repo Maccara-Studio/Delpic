@@ -6,6 +6,8 @@ import { StyleSheet, Text, View } from "react-native";
 import { resolvePlayableUri } from "@/services/mediaLibrary";
 import type { ReviewableAsset } from "@/types/media";
 
+import { VideoCardPlayer } from "./VideoCardPlayer";
+
 function formatDuration(ms: number | null): string {
   if (!ms) return "0:00";
   const totalSeconds = Math.round(ms / 1000);
@@ -14,7 +16,13 @@ function formatDuration(ms: number | null): string {
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
 
-export function CardMedia({ asset }: { asset: ReviewableAsset }) {
+interface CardMediaProps {
+  asset: ReviewableAsset;
+  /** Only the active top-of-stack card gets a real, playing video player — buried/exiting cards get a static frame. */
+  isActive: boolean;
+}
+
+export function CardMedia({ asset, isActive }: CardMediaProps) {
   const [uri, setUri] = useState<string | null>(null);
 
   useEffect(() => {
@@ -28,7 +36,9 @@ export function CardMedia({ asset }: { asset: ReviewableAsset }) {
   }, [asset.id]);
 
   if (asset.mediaType === MediaType.VIDEO) {
-    // Real inline video playback lands in Milestone 5 — for now, show a static placeholder with duration.
+    if (isActive && uri) {
+      return <VideoCardPlayer uri={uri} />;
+    }
     return (
       <View style={[styles.media, styles.videoPlaceholder]}>
         <Text style={styles.playIcon}>▶</Text>

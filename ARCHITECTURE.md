@@ -40,7 +40,8 @@ File-based routing. Each file is a screen; folders in parens (like `(tabs)`) gro
 | `components/deck/SwipeDeck.tsx` | Orchestrates the deck: builds one flat keyed list combining the 3-card visible stack (from `useCardStack`) with any still-animating "exiting" cards, plus loading/empty/finished states, the undo button, and the progress bar. |
 | `components/deck/SwipeCard.tsx` | One card — gesture-driven drag (`useSwipeGesture`), rotation, and the keep/trash border overlay. Handles the edge case where a card that was mid-exit gets pulled back into the stack (fast undo/reset) by re-centering itself. |
 | `components/deck/CardOverlay.tsx` | The green (keep) / red (trash) border that fades in on the active card as it's dragged, driven by `translateX` via `interpolate` — pure worklet, no JS thread involvement. |
-| `components/deck/CardMedia.tsx` | Resolves and renders a card's media: photo via `expo-image`, video as a placeholder with duration (real inline video playback lands in Milestone 5). |
+| `components/deck/CardMedia.tsx` | Resolves and renders a card's media. Photos: `expo-image`. Videos: a real `VideoCardPlayer` when `isActive` (top of stack), otherwise the static play-icon + duration placeholder. |
+| `components/deck/VideoCardPlayer.tsx` | Wraps `expo-video`'s `useVideoPlayer`/`VideoView` — loop on, muted/autoplay defaults from `settingsSlice`, manual mute toggle button. Mounted only for the active card; mount/unmount (driven by `CardMedia`'s `isActive`) is what starts/releases the native player. |
 | `components/deck/ProgressBar.tsx` | Simple reviewed/loaded indicator in the deck header. |
 | `services/mediaLibrary.ts` | Wraps `expo-media-library`'s class-based `Query`/`Asset` API: `checkPermissions`, `requestPermissions`, `fetchAssetsPage` (paginated, newest-first), `resolvePlayableUri`, `deleteAssetsBatch`. The one place in the app that talks to the OS media library. |
 | `store/mmkvStorage.ts` | A single `react-native-mmkv` (v4, Nitro Modules-based) instance wrapped as a Zustand `StateStorage` adapter. |
@@ -55,7 +56,7 @@ File-based routing. Each file is a screen; folders in parens (like `(tabs)`) gro
 | `lib/constants.ts` | Shared constant values (`MEDIA_PAGE_SIZE`, `DECK_PREFETCH_THRESHOLD`, `DECK_STACK_SIZE`, swipe thresholds, `MAX_UNDO_HISTORY`). |
 | `lib/animatedConfig.ts` | Reanimated spring configs — a critically-damped, `overshootClamping` one for snap-back (no bounce past center) and a livelier one for the fling-off. |
 
-**Not created yet** (per the implementation plan, added as their milestones land): `store/slices/onboardingSlice.ts` (Milestone 7), `store/slices/entitlementSlice.ts` (Milestone 8), `services/revenuecat.ts`, `hooks/usePermissions.ts`, `components/deck/VideoCardPlayer.tsx` / `InterstitialCard.tsx`, `components/trash/`, `components/onboarding/`, `components/settings/`, `components/tipjar/`, `data/mockOnboardingAssets.ts`.
+**Not created yet** (per the implementation plan, added as their milestones land): `store/slices/onboardingSlice.ts` (Milestone 7), `store/slices/entitlementSlice.ts` (Milestone 8), `services/revenuecat.ts`, `hooks/usePermissions.ts`, `components/deck/InterstitialCard.tsx`, `components/trash/`, `components/onboarding/`, `components/settings/`, `components/tipjar/`, `data/mockOnboardingAssets.ts`.
 
 ## `assets/`
 

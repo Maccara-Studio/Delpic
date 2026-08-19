@@ -62,7 +62,7 @@ export function SwipeCard({ asset, stackPosition, interactive, onSwipeComplete, 
   return (
     <GestureDetector gesture={gesture}>
       <Animated.View style={[StyleSheet.absoluteFill, styles.card, cardStyle]}>
-        <CardMedia asset={asset} />
+        <CardMedia asset={asset} isActive={stackPosition === 0} />
         <CardOverlay translateX={translateX} />
       </Animated.View>
     </GestureDetector>

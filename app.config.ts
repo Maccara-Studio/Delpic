@@ -33,6 +33,7 @@ const config: ExpoConfig = {
     "expo-status-bar",
     "expo-image",
     "expo-splash-screen",
+    "expo-video",
     [
       "expo-media-library",
       {
