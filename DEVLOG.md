@@ -107,3 +107,17 @@ Chronological record of what was done for each milestone, problems hit along the
 1. Adding `expo-video`'s config plugin to an existing `android/` required a full regeneration (same class of issue as Milestone 2's manifest permissions) — deleted `android/` and rebuilt from scratch via `npx expo run:android` rather than risk an incomplete incremental prebuild.
 
 **Checkpoint:** Confirmed on-device — videos autoplay muted on the active card, the mute/unmute toggle works, and playback stops immediately on swipe (via unmount) with no audio bleed between cards. ✅
+
+---
+
+## Milestone 6 — Trash queue + batch delete
+
+**What was done**
+- Added `src/components/trash/TrashItem.tsx` (thumbnail via `resolvePlayableUri`/`expo-image`, video badge, a restore button that calls `removeFromTrash`), `TrashGrid.tsx` (3-column `FlatList` over `stagedAssets`, empty state), and `TrashActionBar.tsx` (floating bottom bar, hidden when the queue is empty, shows a spinner while deleting).
+- Rewrote `app/(tabs)/trash.tsx` to orchestrate these directly (own `SafeAreaView`, no `Screen` wrapper — same pattern as `SwipeDeck`, since a grid + floating bar doesn't fit `Screen`'s centered layout): a confirmation `Alert` before calling `deleteAssetsBatch` (one native OS confirmation for the whole batch), `clearTrash()` on success, and a silent catch if the user cancels the native prompt or the OS refuses (queue is left untouched either way).
+
+**Problems hit & fixes**
+
+1. **App crashed back out on startup right after these files were added, with a Metro resolution error (`Unable to resolve "./TrashItem" from "TrashGrid.tsx"`) even though the file existed on disk.** The long-running Metro daemon (started during Milestone 5's native rebuild) apparently didn't pick up the newly-created files in the new `src/components/trash/` directory — a stale watcher/resolver cache, distinct from (but similar in symptom to) the dead-Metro-process issue from Milestone 2. → Killed the daemon and ran a fresh `npm start`; also re-ran `adb reverse tcp:8081 tcp:8081` since the tunnel needs re-establishing after a Metro restart. No native rebuild was needed since this milestone added no new native dependency. **Lesson: if Metro fails to resolve a file you just created and a plain restart doesn't look warranted, restart it anyway first — it's cheap and has now fixed two different-looking stale-state symptoms.**
+
+**Checkpoint:** Confirmed on-device — batch delete removes staged items from the device with a single native confirmation, and the trash queue clears correctly afterward. ✅
