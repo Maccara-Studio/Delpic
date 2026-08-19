@@ -23,11 +23,11 @@ File-based routing. Each file is a screen; folders in parens (like `(tabs)`) gro
 
 | Path | Screen |
 |---|---|
-| `_layout.tsx` | Root layout: `GestureHandlerRootView`, `SafeAreaProvider`, the top-level `Stack` (tabs + onboarding modal + tip-jar modal). |
+| `_layout.tsx` | Root layout: holds the native splash screen until the Zustand/MMKV store has hydrated, then renders `GestureHandlerRootView`, `SafeAreaProvider`, and the top-level `Stack` (tabs + onboarding modal + tip-jar modal). |
 | `index.tsx` | Redirects to `(tabs)/deck`. |
 | `onboarding.tsx` | First-time tutorial modal (placeholder — built in Milestone 7). |
 | `(tabs)/_layout.tsx` | Bottom tab bar: Deck / Trash / Settings. |
-| `(tabs)/deck.tsx` | Main swipe deck screen. Currently a **debug grid** of real photos/videos (temporary — replaced by the actual swipe deck in Milestone 3/4). |
+| `(tabs)/deck.tsx` | Main swipe deck screen: handles the media-library permission gate, then renders `SwipeDeck`. |
 | `(tabs)/trash.tsx` | Trash queue review screen (placeholder — Milestone 6). |
 | `(tabs)/settings.tsx` | Settings screen (placeholder — Milestone 9). |
 | `settings/tip-jar.tsx` | Tip Jar / Pro upgrade modal (placeholder — Milestone 8). |
@@ -37,12 +37,20 @@ File-based routing. Each file is a screen; folders in parens (like `(tabs)`) gro
 | Path | What it is |
 |---|---|
 | `components/common/Screen.tsx` | Shared placeholder screen wrapper (title + safe area) used by unfinished screens. |
-| `components/debug/AssetThumbnail.tsx` | Temporary thumbnail renderer for the Milestone 2 debug grid — resolves and displays one media asset. Will be removed once the real `SwipeCard` exists. |
+| `components/deck/SwipeDeck.tsx` | Renders the 3-card visible window from `useCardStack`, plus loading/empty/finished states. |
+| `components/deck/SwipeCard.tsx` | One card in the stack — static scale/offset by `stackPosition` for now (Milestone 3). Gesture-driven dragging lands in Milestone 4. Top card is tap-to-advance as a temporary stand-in for swiping. |
+| `components/deck/CardMedia.tsx` | Resolves and renders a card's media: photo via `expo-image`, video as a placeholder with duration (real inline video playback lands in Milestone 5). |
 | `services/mediaLibrary.ts` | Wraps `expo-media-library`'s class-based `Query`/`Asset` API: `checkPermissions`, `requestPermissions`, `fetchAssetsPage` (paginated, newest-first), `resolvePlayableUri`, `deleteAssetsBatch`. The one place in the app that talks to the OS media library. |
+| `store/mmkvStorage.ts` | A single `react-native-mmkv` (v4, Nitro Modules-based) instance wrapped as a Zustand `StateStorage` adapter. |
+| `store/useAppStore.ts` | The combined Zustand store — slices merged together under one `persist(...)` call backed by MMKV. |
+| `store/types.ts` | `AppState` — the combined type of all slices, used so each slice's `StateCreator` can see the whole store. |
+| `store/slices/sessionSlice.ts` | `cursorIndex` / `lastReviewedAssetId`, persisted so the deck resumes where you left off after a restart. |
+| `store/slices/settingsSlice.ts` | `autoplayVideos` / `muteByDefault` / `hapticsEnabled` — not wired to any UI yet (Milestones 5/9 will use these). |
+| `hooks/useCardStack.ts` | Paginates through `mediaLibrary.fetchAssetsPage`, exposes the current 3-item visible window plus `advance()`, and prefetches the next page as the cursor approaches the end of what's loaded. |
 | `types/media.ts` | `ReviewableAsset` — the app's narrowed view of `expo-media-library`'s `AssetMetadata` (photos/videos only). |
-| `lib/constants.ts` | Shared constant values (currently just `MEDIA_PAGE_SIZE`). |
+| `lib/constants.ts` | Shared constant values (`MEDIA_PAGE_SIZE`, `DECK_PREFETCH_THRESHOLD`, `DECK_STACK_SIZE`). |
 
-**Not created yet** (per the implementation plan, added as their milestones land): `store/` (Zustand + MMKV slices), `services/revenuecat.ts`, `hooks/` (`useCardStack`, `useSwipeGesture`, `usePermissions`), `components/deck/` (the real swipe deck), `components/trash/`, `components/onboarding/`, `components/settings/`, `components/tipjar/`, `data/mockOnboardingAssets.ts`.
+**Not created yet** (per the implementation plan, added as their milestones land): `store/slices/trashSlice.ts` (Milestone 4/6), `store/slices/onboardingSlice.ts` (Milestone 7), `store/slices/entitlementSlice.ts` (Milestone 8), `services/revenuecat.ts`, `hooks/useSwipeGesture.ts`, `hooks/usePermissions.ts`, `components/deck/CardOverlay.tsx` / `VideoCardPlayer.tsx` / `InterstitialCard.tsx` / `UndoButton.tsx` / `ProgressBar.tsx`, `components/trash/`, `components/onboarding/`, `components/settings/`, `components/tipjar/`, `data/mockOnboardingAssets.ts`.
 
 ## `assets/`
 

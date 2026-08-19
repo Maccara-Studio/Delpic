@@ -1,9 +1,32 @@
 import { Stack } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
+import { useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
+import { useAppStore } from "@/store/useAppStore";
+
+SplashScreen.preventAutoHideAsync().catch(() => {});
+
 export default function RootLayout() {
+  const [hasHydrated, setHasHydrated] = useState(() => useAppStore.persist.hasHydrated());
+
+  useEffect(() => {
+    if (hasHydrated) return;
+    return useAppStore.persist.onFinishHydration(() => setHasHydrated(true));
+  }, [hasHydrated]);
+
+  useEffect(() => {
+    if (hasHydrated) {
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [hasHydrated]);
+
+  if (!hasHydrated) {
+    return null;
+  }
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
