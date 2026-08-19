@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 import { mmkvStorage } from "./mmkvStorage";
+import { createOnboardingSlice } from "./slices/onboardingSlice";
 import { createSessionSlice } from "./slices/sessionSlice";
 import { createSettingsSlice } from "./slices/settingsSlice";
 import { createTrashSlice } from "./slices/trashSlice";
@@ -13,6 +14,7 @@ export const useAppStore = create<AppState>()(
       ...createSessionSlice(...a),
       ...createSettingsSlice(...a),
       ...createTrashSlice(...a),
+      ...createOnboardingSlice(...a),
     }),
     {
       name: "delpic-store",

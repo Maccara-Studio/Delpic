@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import { Alert, Pressable, StyleSheet, Text } from "react-native";
 
 import { Screen } from "@/components/common/Screen";
@@ -28,7 +29,10 @@ export default function SettingsScreen() {
   return (
     <Screen title="Settings">
       <Pressable onPress={handleRestart} style={styles.button}>
-        <Text style={styles.buttonText}>Restart from Beginning</Text>
+        <Text style={styles.buttonText}>Reset Review Progress</Text>
+      </Pressable>
+      <Pressable onPress={() => router.push("/onboarding")} style={styles.secondaryButton}>
+        <Text style={styles.secondaryButtonText}>Replay Tutorial</Text>
       </Pressable>
     </Screen>
   );
@@ -44,6 +48,16 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: "#fff",
+    fontWeight: "600",
+  },
+  secondaryButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    backgroundColor: "#f3f4f6",
+  },
+  secondaryButtonText: {
+    color: "#111",
     fontWeight: "600",
   },
 });
