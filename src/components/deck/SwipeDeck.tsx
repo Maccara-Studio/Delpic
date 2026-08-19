@@ -1,12 +1,50 @@
+import { useCallback, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useCardStack } from "@/hooks/useCardStack";
+import type { SwipeDirection } from "@/store/slices/sessionSlice";
+import type { ReviewableAsset } from "@/types/media";
 
+import { ProgressBar } from "./ProgressBar";
 import { SwipeCard } from "./SwipeCard";
 
+interface DeckEntry {
+  asset: ReviewableAsset;
+  stackPosition: number;
+  interactive: boolean;
+}
+
 export function SwipeDeck() {
-  const { visibleAssets, isLoading, isEmpty, isDeckFinished, canGoBack, advance, goBack } = useCardStack();
+  const {
+    visibleAssets,
+    isLoading,
+    isEmpty,
+    isDeckFinished,
+    reviewedCount,
+    loadedCount,
+    canUndo,
+    completeSwipe,
+    undo,
+  } = useCardStack();
+
+  // Cards that have already been swiped (and thus dropped out of `visibleAssets`) but are
+  // still visually flying off screen. Kept mounted here — same component instance, same key,
+  // merged into a single list with the active stack below — so their exit animation can
+  // finish independently without blocking the next card from becoming interactive right away.
+  const [exitingAssets, setExitingAssets] = useState<ReviewableAsset[]>([]);
+
+  const handleSwipeComplete = useCallback(
+    (asset: ReviewableAsset, direction: SwipeDirection) => {
+      completeSwipe(asset, direction);
+      setExitingAssets((prev) => (prev.some((a) => a.id === asset.id) ? prev : [...prev, asset]));
+    },
+    [completeSwipe],
+  );
+
+  const handleExitAnimationFinished = useCallback((assetId: string) => {
+    setExitingAssets((prev) => prev.filter((a) => a.id !== assetId));
+  }, []);
 
   if (isLoading) {
     return (
@@ -24,7 +62,7 @@ export function SwipeDeck() {
     );
   }
 
-  if (isDeckFinished) {
+  if (isDeckFinished && exitingAssets.length === 0) {
     return (
       <View style={styles.center}>
         <Text>You&apos;ve reviewed everything! 🎉</Text>
@@ -32,26 +70,42 @@ export function SwipeDeck() {
     );
   }
 
-  const stacked = visibleAssets
-    .map((asset, stackPosition) => ({ asset, stackPosition }))
+  // A single flat, keyed list — stack entries (buried-to-top, so the top card paints last/on
+  // top) followed by exiting entries (painted above everything via zIndex). One list means one
+  // unambiguous key-based reconciliation, so a card moving from "top of stack" to "exiting"
+  // between renders keeps its component instance (and in-flight animation) instead of remounting.
+  const stackEntries: DeckEntry[] = [...visibleAssets]
+    .map((asset, stackPosition) => ({ asset, stackPosition, interactive: stackPosition === 0 }))
     .reverse();
+  // Guard against an asset appearing in both groups at once (e.g. undo bringing a card back
+  // into the visible stack before its own exit animation had a chance to finish and clean up).
+  const visibleAssetIds = new Set(visibleAssets.map((a) => a.id));
+  const exitingEntries: DeckEntry[] = exitingAssets
+    .filter((asset) => !visibleAssetIds.has(asset.id))
+    .map((asset) => ({ asset, stackPosition: -1, interactive: false }));
+  const entries = [...stackEntries, ...exitingEntries];
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
       <View style={styles.header}>
-        {canGoBack ? (
-          <Pressable onPress={goBack} style={styles.backButton} hitSlop={12}>
+        {canUndo ? (
+          <Pressable onPress={undo} style={styles.backButton} hitSlop={12}>
             <Text style={styles.backButtonText}>←</Text>
           </Pressable>
-        ) : null}
+        ) : (
+          <View style={styles.backButtonPlaceholder} />
+        )}
+        <ProgressBar reviewed={reviewedCount} loaded={loadedCount} />
       </View>
       <View style={styles.deckContainer}>
-        {stacked.map(({ asset, stackPosition }) => (
+        {entries.map(({ asset, stackPosition, interactive }) => (
           <SwipeCard
             key={asset.id}
             asset={asset}
             stackPosition={stackPosition}
-            onPress={stackPosition === 0 ? advance : undefined}
+            interactive={interactive}
+            onSwipeComplete={interactive ? (direction) => handleSwipeComplete(asset, direction) : undefined}
+            onExitAnimationFinished={() => handleExitAnimationFinished(asset.id)}
           />
         ))}
       </View>
@@ -70,7 +124,9 @@ const styles = StyleSheet.create({
   },
   header: {
     height: 52,
-    justifyContent: "center",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
     paddingHorizontal: 16,
   },
   deckContainer: {
@@ -85,6 +141,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  backButtonPlaceholder: {
+    width: 40,
+    height: 40,
   },
   backButtonText: {
     color: "#fff",

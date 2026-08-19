@@ -28,8 +28,8 @@ File-based routing. Each file is a screen; folders in parens (like `(tabs)`) gro
 | `onboarding.tsx` | First-time tutorial modal (placeholder — built in Milestone 7). |
 | `(tabs)/_layout.tsx` | Bottom tab bar: Deck / Trash / Settings. |
 | `(tabs)/deck.tsx` | Main swipe deck screen: handles the media-library permission gate, then renders `SwipeDeck`. |
-| `(tabs)/trash.tsx` | Trash queue review screen (placeholder — Milestone 6). |
-| `(tabs)/settings.tsx` | Settings screen (placeholder — Milestone 9). |
+| `(tabs)/trash.tsx` | Trash queue review screen — currently just a staged-item count (full grid/restore UI is Milestone 6). |
+| `(tabs)/settings.tsx` | Settings screen — currently just "Restart from Beginning" (resets session + clears trash queue; rest of Settings is Milestone 9). |
 | `settings/tip-jar.tsx` | Tip Jar / Pro upgrade modal (placeholder — Milestone 8). |
 
 ## `src/` — everything else
@@ -37,20 +37,25 @@ File-based routing. Each file is a screen; folders in parens (like `(tabs)`) gro
 | Path | What it is |
 |---|---|
 | `components/common/Screen.tsx` | Shared placeholder screen wrapper (title + safe area) used by unfinished screens. |
-| `components/deck/SwipeDeck.tsx` | Renders the 3-card visible window from `useCardStack`, plus loading/empty/finished states. |
-| `components/deck/SwipeCard.tsx` | One card in the stack — static scale/offset by `stackPosition` for now (Milestone 3). Gesture-driven dragging lands in Milestone 4. Top card is tap-to-advance as a temporary stand-in for swiping. |
+| `components/deck/SwipeDeck.tsx` | Orchestrates the deck: builds one flat keyed list combining the 3-card visible stack (from `useCardStack`) with any still-animating "exiting" cards, plus loading/empty/finished states, the undo button, and the progress bar. |
+| `components/deck/SwipeCard.tsx` | One card — gesture-driven drag (`useSwipeGesture`), rotation, and the keep/trash border overlay. Handles the edge case where a card that was mid-exit gets pulled back into the stack (fast undo/reset) by re-centering itself. |
+| `components/deck/CardOverlay.tsx` | The green (keep) / red (trash) border that fades in on the active card as it's dragged, driven by `translateX` via `interpolate` — pure worklet, no JS thread involvement. |
 | `components/deck/CardMedia.tsx` | Resolves and renders a card's media: photo via `expo-image`, video as a placeholder with duration (real inline video playback lands in Milestone 5). |
+| `components/deck/ProgressBar.tsx` | Simple reviewed/loaded indicator in the deck header. |
 | `services/mediaLibrary.ts` | Wraps `expo-media-library`'s class-based `Query`/`Asset` API: `checkPermissions`, `requestPermissions`, `fetchAssetsPage` (paginated, newest-first), `resolvePlayableUri`, `deleteAssetsBatch`. The one place in the app that talks to the OS media library. |
 | `store/mmkvStorage.ts` | A single `react-native-mmkv` (v4, Nitro Modules-based) instance wrapped as a Zustand `StateStorage` adapter. |
 | `store/useAppStore.ts` | The combined Zustand store — slices merged together under one `persist(...)` call backed by MMKV. |
 | `store/types.ts` | `AppState` — the combined type of all slices, used so each slice's `StateCreator` can see the whole store. |
-| `store/slices/sessionSlice.ts` | `cursorIndex` / `lastReviewedAssetId`, persisted so the deck resumes where you left off after a restart. |
+| `store/slices/sessionSlice.ts` | `cursorIndex` / `lastReviewedAssetId` / `history` (capped undo ring buffer), persisted so the deck resumes where you left off after a restart. |
 | `store/slices/settingsSlice.ts` | `autoplayVideos` / `muteByDefault` / `hapticsEnabled` — not wired to any UI yet (Milestones 5/9 will use these). |
-| `hooks/useCardStack.ts` | Paginates through `mediaLibrary.fetchAssetsPage`, exposes the current 3-item visible window plus `advance()`, and prefetches the next page as the cursor approaches the end of what's loaded. |
+| `store/slices/trashSlice.ts` | `stagedAssets` — the soft-delete queue swiping left adds to; nothing is deleted from the OS library until the batch-delete flow in Milestone 6. |
+| `hooks/useCardStack.ts` | Paginates through `mediaLibrary.fetchAssetsPage`, exposes the current 3-item visible window plus `completeSwipe`/`undo`, and prefetches the next page as the cursor approaches the end of what's loaded. The swipe/undo hot path writes via `useAppStore.setState`/`getState()` directly (one atomic update, always reading the freshest state) rather than calling per-slice actions, since swipes can arrive well under 100ms apart. |
+| `hooks/useSwipeGesture.ts` | The Reanimated + Gesture Handler core: a memoized `Gesture.Pan()` (callbacks routed through refs so it never needs to be recreated except when `enabled` changes — recreating it every render caused a real double-fire/duplicate-key bug under rapid swipes), spring physics for both the fling-off and the snap-back, and fling/distance thresholds. The data model advances immediately on release rather than waiting for the fly-off spring to settle, so consecutive swipes aren't throttled by animation duration. |
 | `types/media.ts` | `ReviewableAsset` — the app's narrowed view of `expo-media-library`'s `AssetMetadata` (photos/videos only). |
-| `lib/constants.ts` | Shared constant values (`MEDIA_PAGE_SIZE`, `DECK_PREFETCH_THRESHOLD`, `DECK_STACK_SIZE`). |
+| `lib/constants.ts` | Shared constant values (`MEDIA_PAGE_SIZE`, `DECK_PREFETCH_THRESHOLD`, `DECK_STACK_SIZE`, swipe thresholds, `MAX_UNDO_HISTORY`). |
+| `lib/animatedConfig.ts` | Reanimated spring configs — a critically-damped, `overshootClamping` one for snap-back (no bounce past center) and a livelier one for the fling-off. |
 
-**Not created yet** (per the implementation plan, added as their milestones land): `store/slices/trashSlice.ts` (Milestone 4/6), `store/slices/onboardingSlice.ts` (Milestone 7), `store/slices/entitlementSlice.ts` (Milestone 8), `services/revenuecat.ts`, `hooks/useSwipeGesture.ts`, `hooks/usePermissions.ts`, `components/deck/CardOverlay.tsx` / `VideoCardPlayer.tsx` / `InterstitialCard.tsx` / `UndoButton.tsx` / `ProgressBar.tsx`, `components/trash/`, `components/onboarding/`, `components/settings/`, `components/tipjar/`, `data/mockOnboardingAssets.ts`.
+**Not created yet** (per the implementation plan, added as their milestones land): `store/slices/onboardingSlice.ts` (Milestone 7), `store/slices/entitlementSlice.ts` (Milestone 8), `services/revenuecat.ts`, `hooks/usePermissions.ts`, `components/deck/VideoCardPlayer.tsx` / `InterstitialCard.tsx`, `components/trash/`, `components/onboarding/`, `components/settings/`, `components/tipjar/`, `data/mockOnboardingAssets.ts`.
 
 ## `assets/`
 

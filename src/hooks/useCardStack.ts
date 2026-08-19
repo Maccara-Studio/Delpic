@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { DECK_PREFETCH_THRESHOLD, DECK_STACK_SIZE } from "@/lib/constants";
+import { DECK_PREFETCH_THRESHOLD, DECK_STACK_SIZE, MAX_UNDO_HISTORY } from "@/lib/constants";
 import { fetchAssetsPage } from "@/services/mediaLibrary";
+import type { SwipeDirection } from "@/store/slices/sessionSlice";
 import { useAppStore } from "@/store/useAppStore";
 import type { ReviewableAsset } from "@/types/media";
 
 export function useCardStack() {
   const cursorIndex = useAppStore((s) => s.cursorIndex);
-  const setCursor = useAppStore((s) => s.setCursor);
+  const canUndo = useAppStore((s) => s.history.length > 0);
 
   const [assets, setAssets] = useState<ReviewableAsset[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -41,26 +42,58 @@ export function useCardStack() {
 
   const visibleAssets = assets.slice(cursorIndex, cursorIndex + DECK_STACK_SIZE);
 
-  const advance = useCallback(() => {
-    const current = assets[cursorIndex];
-    if (!current) return;
-    setCursor(cursorIndex + 1, current.id);
-  }, [assets, cursorIndex, setCursor]);
+  // completeSwipe/undo write directly via useAppStore.setState/getState (one atomic update
+  // touching session + trash together, always reading the freshest cursorIndex) instead of
+  // calling each slice action separately from a React-render-time closure — swipes can come
+  // in well under 100ms apart, faster than a React re-render, so this hot path can't afford
+  // to trust stale closures or trigger three separate MMKV writes per swipe.
+  const completeSwipe = useCallback(
+    (asset: ReviewableAsset, direction: SwipeDirection) => {
+      const state = useAppStore.getState();
+      const wasStagedForTrash = direction === "left";
 
-  const goBack = useCallback(() => {
-    if (cursorIndex === 0) return;
-    const previousIndex = cursorIndex - 1;
-    const previous = assets[previousIndex];
-    setCursor(previousIndex, previous?.id ?? null);
-  }, [assets, cursorIndex, setCursor]);
+      useAppStore.setState({
+        cursorIndex: state.cursorIndex + 1,
+        lastReviewedAssetId: asset.id,
+        history: [...state.history, { assetId: asset.id, direction, wasStagedForTrash }].slice(-MAX_UNDO_HISTORY),
+        stagedAssets: wasStagedForTrash
+          ? [
+              ...state.stagedAssets,
+              { id: asset.id, filename: asset.filename, mediaType: asset.mediaType, stagedAt: Date.now() },
+            ]
+          : state.stagedAssets,
+      });
+    },
+    [],
+  );
+
+  const undo = useCallback(() => {
+    const state = useAppStore.getState();
+    const entry = state.history[state.history.length - 1];
+    if (!entry) return;
+
+    const newIndex = state.cursorIndex - 1;
+    const newLastReviewed = newIndex > 0 ? (assets[newIndex - 1]?.id ?? null) : null;
+
+    useAppStore.setState({
+      cursorIndex: newIndex,
+      lastReviewedAssetId: newLastReviewed,
+      history: state.history.slice(0, -1),
+      stagedAssets: entry.wasStagedForTrash
+        ? state.stagedAssets.filter((a) => a.id !== entry.assetId)
+        : state.stagedAssets,
+    });
+  }, [assets]);
 
   return {
     visibleAssets,
     isLoading,
     isEmpty: !isLoading && assets.length === 0,
     isDeckFinished: !isLoading && assets.length > 0 && cursorIndex >= assets.length,
-    canGoBack: cursorIndex > 0,
-    advance,
-    goBack,
+    reviewedCount: cursorIndex,
+    loadedCount: assets.length,
+    canUndo,
+    completeSwipe,
+    undo,
   };
 }
