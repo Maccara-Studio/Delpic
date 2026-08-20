@@ -1,12 +1,35 @@
 # Delpic
 
-A photo & video decluttering app: swipe right to keep, swipe left to stage for deletion, review your trash queue, then delete everything in one native confirmation.
+Delpic is a mobile app that makes cleaning up your camera roll fast and painless. Swipe right to keep a photo or video, swipe left to send it to a trash queue, review that queue, then delete everything at once with a single confirmation — no more digging through thousands of photos one at a time.
 
-Built with Expo (React Native), Expo Router, Reanimated + Gesture Handler, Zustand + MMKV, expo-media-library, expo-video, and RevenueCat.
+## Features
 
-See [PREREQUISITES.md](./PREREQUISITES.md) first if this is your first time setting up the project. See [ARCHITECTURE.md](./ARCHITECTURE.md) for a map of what each file/folder is, and [DEVLOG.md](./DEVLOG.md) for a running log of what's been built per milestone and the problems hit along the way.
+- **Tinder-style review** — swipe through your camera roll one item at a time, newest first
+- **Inline video playback** — videos autoplay (muted by default) right in the deck, no need to open them separately
+- **Batched deletion** — nothing is deleted until you confirm the whole trash queue at once, with a single native OS prompt
+- **Undo** — step back through your last several decisions if you change your mind
+- **Resume where you left off** — your progress is saved locally and picks up right where you stopped, even after restarting the app
+- **Guided onboarding** — a short interactive tour on first launch
 
-## First-time setup
+## Status
+
+Delpic is in active development and closed testing. It isn't published on any app store yet.
+
+## Built with
+
+Expo (React Native), Expo Router, Reanimated + Gesture Handler, Zustand + MMKV, expo-media-library, expo-video, and RevenueCat.
+
+## License
+
+All rights reserved — see [LICENSE](./LICENSE). This code is public for reference only; no permission is granted to reuse it.
+
+---
+
+## Development
+
+The rest of this document is for people working on Delpic itself. See [PREREQUISITES.md](./PREREQUISITES.md) for one-time machine setup, [ARCHITECTURE.md](./ARCHITECTURE.md) for a map of what each file/folder is, and [DEVLOG.md](./DEVLOG.md) for a running log of what's been built per milestone.
+
+### First-time setup
 
 ```sh
 npm install
@@ -20,7 +43,7 @@ adb devices
 
 You should see your device listed with status `device`.
 
-## Day-to-day development (Android, over USB)
+### Day-to-day development (Android, over USB)
 
 The first time, or whenever a native dependency/config plugin changes, build and install the custom dev client onto your phone:
 
@@ -46,7 +69,7 @@ This works because `npx expo run:android`/`expo start` automatically set up `adb
 
 **Rule of thumb:** JS/TS-only change → `npm start` is enough. Added or changed a native dependency (anything installed via `npx expo install` that touches native code) or edited `app.config.ts` plugins → rebuild with `npm run android`.
 
-## iOS (no local Mac)
+### iOS (no local Mac)
 
 iOS builds run on Expo's cloud build service (EAS Build) since there's no local Mac available:
 
@@ -62,7 +85,7 @@ npm start
 
 and connect from the installed dev client.
 
-## Troubleshooting
+### Troubleshooting
 
 - **`adb devices` shows nothing** — check USB debugging is enabled on the phone, try a different USB cable/port, reinstall the USB driver, and check for the "Allow USB debugging?" prompt on the phone screen.
 - **`adb devices` shows `unauthorized`** — unlock the phone and tap "Allow" on the debugging prompt.
@@ -74,7 +97,7 @@ and connect from the installed dev client.
 - **App shows a persistent blank white screen** — usually means Metro isn't actually reachable, even if a terminal window looks like it's still running. Check `Invoke-WebRequest http://localhost:8081/status` actually responds; if it hangs/errors, the Metro process likely died silently — kill stray `node` processes and restart with `npm start`.
 - **Testing the permission flow again after it was already granted** — revoke it without digging through phone settings: `adb shell pm revoke com.delpic.app android.permission.READ_MEDIA_IMAGES`, same for `READ_MEDIA_VIDEO`, then `adb shell am force-stop com.delpic.app` and reopen the app.
 
-## Type-checking & linting
+### Type-checking & linting
 
 ```sh
 npm run typecheck
