@@ -36,6 +36,12 @@ export function SwipeCard({ asset, stackPosition, interactive, onSwipeComplete, 
   // the fly-off left them — e.g. far off-screen — instead of centered. Snap back to center
   // only on that specific transition (exiting -> back in the stack), never when actually
   // leaving the stack, so the real exit animation is untouched.
+  //
+  // Interrupting the in-flight spring this way means it never reaches "finished", so its own
+  // withSpring callback never calls onExitAnimationFinished — call it here instead. Without
+  // this, rescued cards stay stuck in SwipeDeck's exitingAssets forever; undoing far enough
+  // that the same card falls back out of the visible window makes it reappear as a stale,
+  // centered, non-interactive ghost stacked above the real top card, blocking every swipe.
   const prevStackPositionRef = useRef(stackPosition);
   useEffect(() => {
     const wasExiting = prevStackPositionRef.current === -1;
@@ -43,8 +49,9 @@ export function SwipeCard({ asset, stackPosition, interactive, onSwipeComplete, 
     if (wasExiting && stackPosition !== -1) {
       translateX.value = 0;
       translateY.value = 0;
+      onExitAnimationFinished?.();
     }
-  }, [stackPosition, translateX, translateY]);
+  }, [stackPosition, translateX, translateY, onExitAnimationFinished]);
 
   const cardStyle = useAnimatedStyle(() => {
     const rotate = interpolate(

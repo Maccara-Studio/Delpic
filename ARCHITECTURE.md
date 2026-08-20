@@ -55,7 +55,7 @@ File-based routing. Each file is a screen; folders in parens (like `(tabs)`) gro
 | `store/useAppStore.ts` | The combined Zustand store — slices merged together under one `persist(...)` call backed by MMKV. |
 | `store/types.ts` | `AppState` — the combined type of all slices, used so each slice's `StateCreator` can see the whole store. |
 | `store/slices/sessionSlice.ts` | `cursorIndex` / `lastReviewedAssetId` / `history` (capped undo ring buffer), persisted so the deck resumes where you left off after a restart. |
-| `store/slices/settingsSlice.ts` | `autoplayVideos` / `muteByDefault` / `hapticsEnabled` — not wired to any UI yet (Milestones 5/9 will use these). |
+| `store/slices/settingsSlice.ts` | `autoplayVideos` / `muteByDefault`, wired to toggles in the Settings tab. |
 | `store/slices/trashSlice.ts` | `stagedAssets` — the soft-delete queue swiping left adds to; nothing is deleted from the OS library until the batch-delete flow in Milestone 6. |
 | `store/slices/onboardingSlice.ts` | `hasCompletedOnboarding` (persisted) + `completeOnboarding()`. Gates `index.tsx`'s redirect target — it's the only thing that decides "first launch" vs. "returning user". |
 | `data/mockOnboardingAssets.ts` | Illustrative emoji + flat-color mock "photos" for the onboarding Deck step — no bundled images, no media permission needed. |

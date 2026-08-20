@@ -5,7 +5,6 @@ import type { AppState } from "../types";
 export interface SettingsValues {
   autoplayVideos: boolean;
   muteByDefault: boolean;
-  hapticsEnabled: boolean;
 }
 
 export interface SettingsSlice extends SettingsValues {
@@ -15,6 +14,5 @@ export interface SettingsSlice extends SettingsValues {
 export const createSettingsSlice: StateCreator<AppState, [], [], SettingsSlice> = (set) => ({
   autoplayVideos: true,
   muteByDefault: true,
-  hapticsEnabled: true,
   updateSetting: (key, value) => set({ [key]: value } as Partial<AppState>),
 });

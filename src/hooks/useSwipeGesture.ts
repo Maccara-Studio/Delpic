@@ -39,10 +39,16 @@ export function useSwipeGesture({ enabled, onSwipeComplete, onExitAnimationFinis
     onExitAnimationFinishedRef.current?.();
   }, []);
 
+  // `enabled` is applied imperatively below instead of through this memo's deps. `.enabled()`
+  // mutates and returns the same gesture instance (builder pattern), so toggling it in place
+  // keeps GestureDetector attached to one stable native handler. Rebuilding the whole Gesture.Pan
+  // (as putting `enabled` in the deps here used to do) forces a detach/reattach of the native
+  // recognizer on every toggle — under rapid undo taps, stackPosition flips interactive on/off
+  // several times within milliseconds, and that churn was enough to wedge the native gesture
+  // handler entirely (cards frozen, no crash, since the JS/state side kept working fine).
   const gesture = useMemo(
     () =>
       Gesture.Pan()
-        .enabled(enabled)
         .onUpdate((event) => {
           "worklet";
           translateX.value = event.translationX;
@@ -71,8 +77,9 @@ export function useSwipeGesture({ enabled, onSwipeComplete, onExitAnimationFinis
             translateY.value = withSpring(0, SNAP_BACK_SPRING_CONFIG);
           }
         }),
-    [enabled, handleSwipeComplete, handleExitAnimationFinished, translateX, translateY],
+    [handleSwipeComplete, handleExitAnimationFinished, translateX, translateY],
   );
+  gesture.enabled(enabled);
 
   return { gesture, translateX, translateY };
 }

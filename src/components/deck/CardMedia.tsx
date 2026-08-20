@@ -51,7 +51,7 @@ export function CardMedia({ asset, isActive }: CardMediaProps) {
     return <View style={[styles.media, styles.imagePlaceholder]} />;
   }
 
-  return <Image source={{ uri }} style={styles.media} contentFit="cover" />;
+  return <Image source={{ uri }} style={styles.media} contentFit="contain" />;
 }
 
 const styles = StyleSheet.create({
