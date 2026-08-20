@@ -50,11 +50,11 @@ export default function DeckScreen() {
       <Screen title="Deck">
         <Text style={styles.message}>Delpic needs access to your photos and videos to help you declutter them.</Text>
         {permission.canAskAgain ? (
-          <Pressable onPress={ensurePermission} style={styles.button}>
+          <Pressable onPress={ensurePermission} style={styles.button} accessibilityRole="button">
             <Text style={styles.buttonText}>Grant Access</Text>
           </Pressable>
         ) : (
-          <Pressable onPress={() => Linking.openSettings()} style={styles.button}>
+          <Pressable onPress={() => Linking.openSettings()} style={styles.button} accessibilityRole="button">
             <Text style={styles.buttonText}>Open Settings</Text>
           </Pressable>
         )}
@@ -67,7 +67,7 @@ export default function DeckScreen() {
       {permission.status === "limited" && (
         <View style={styles.limitedBanner}>
           <Text style={styles.limitedBannerText}>You&apos;ve only shared some photos with Delpic.</Text>
-          <Pressable onPress={() => openMediaPermissionPicker().then(ensurePermission)}>
+          <Pressable onPress={() => openMediaPermissionPicker().then(ensurePermission)} accessibilityRole="link">
             <Text style={styles.limitedBannerLink}>Select more</Text>
           </Pressable>
         </View>

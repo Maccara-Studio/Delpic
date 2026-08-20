@@ -10,7 +10,14 @@ export function TrashActionBar({ count, isDeleting, onDelete }: TrashActionBarPr
   if (count === 0) return null;
 
   return (
-    <Pressable onPress={onDelete} disabled={isDeleting} style={[styles.bar, isDeleting && styles.barDisabled]}>
+    <Pressable
+      onPress={onDelete}
+      disabled={isDeleting}
+      style={[styles.bar, isDeleting && styles.barDisabled]}
+      accessibilityRole="button"
+      accessibilityLabel={isDeleting ? "Deleting…" : `Delete ${count} item${count === 1 ? "" : "s"}`}
+      accessibilityState={{ disabled: isDeleting, busy: isDeleting }}
+    >
       {isDeleting ? (
         <ActivityIndicator color="#fff" />
       ) : (

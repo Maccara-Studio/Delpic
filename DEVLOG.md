@@ -119,3 +119,13 @@ Chronological record of what was done per milestone and the key problems hit alo
 - Along the way, also stopped fully recreating the swipe gesture on every interactive/buried toggle (`.enabled()` mutates the existing gesture instead) — cheaper, and avoids native gesture-handler churn under rapid state changes.
 
 **Status:** Settings toggles work and persist, landscape media displays fully, undo is spam-safe. ✅
+
+---
+
+## Milestone 10 — Error handling, empty states, accessibility
+
+**Built:** Permission-denied screen now offers "Grant Access" (if askable again) or "Open Settings", re-checks permission automatically when the app returns to foreground (needed since granting via Settings happens outside the app), and surfaces Android/iOS "limited" photo access with a banner to select more. `useCardStack` catches page-load failures instead of hanging on "Loading…" forever, with a Retry button. Empty-library and "all reviewed" states got icons/copy, the latter linking to the Trash tab when items are staged. Accessibility labels/roles added to every icon-only control (undo, mute, restore, delete bar) and the remaining buttons/switches.
+
+**Skipped:** Dark mode (not wanted) and swipe-gesture accessibility actions (the core task is inherently visual — a screen reader user can't judge a photo they can't see, so the effort didn't justify touching the recently-stabilized gesture code). Production EAS profile was already correct as scaffolded (defaults to `.aab` + `autoIncrement`); `eas submit` credentials are blocked on the Play Console account.
+
+**Status:** No more dead-end screens; permission, load-failure, and empty/finished states all have a way forward. ✅

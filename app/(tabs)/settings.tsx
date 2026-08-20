@@ -37,21 +37,33 @@ export default function SettingsScreen() {
             <Text style={styles.rowLabel}>Autoplay videos</Text>
             <Text style={styles.rowDescription}>Play videos automatically when they reach the top of the deck.</Text>
           </View>
-          <Switch value={autoplayVideos} onValueChange={(value) => updateSetting("autoplayVideos", value)} />
+          <Switch
+            value={autoplayVideos}
+            onValueChange={(value) => updateSetting("autoplayVideos", value)}
+            accessibilityLabel="Autoplay videos"
+          />
         </View>
         <View style={styles.row}>
           <View style={styles.rowText}>
             <Text style={styles.rowLabel}>Mute by default</Text>
             <Text style={styles.rowDescription}>Videos start muted; tap the speaker icon to unmute.</Text>
           </View>
-          <Switch value={muteByDefault} onValueChange={(value) => updateSetting("muteByDefault", value)} />
+          <Switch
+            value={muteByDefault}
+            onValueChange={(value) => updateSetting("muteByDefault", value)}
+            accessibilityLabel="Mute by default"
+          />
         </View>
       </View>
 
-      <Pressable onPress={handleRestart} style={styles.button}>
+      <Pressable onPress={handleRestart} style={styles.button} accessibilityRole="button">
         <Text style={styles.buttonText}>Reset Review Progress</Text>
       </Pressable>
-      <Pressable onPress={() => router.push("/onboarding")} style={styles.secondaryButton}>
+      <Pressable
+        onPress={() => router.push("/onboarding")}
+        style={styles.secondaryButton}
+        accessibilityRole="button"
+      >
         <Text style={styles.secondaryButtonText}>Replay Tutorial</Text>
       </Pressable>
     </Screen>

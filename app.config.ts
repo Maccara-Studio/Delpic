@@ -4,7 +4,7 @@ const config: ExpoConfig = {
   name: "Delpic",
   slug: "delpic",
   owner: "sam84723s-team",
-  version: "1.1.2",
+  version: "1.1.3",
   scheme: "delpic",
   orientation: "portrait",
   icon: "./assets/icon.png",

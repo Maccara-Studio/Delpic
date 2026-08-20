@@ -32,7 +32,13 @@ export function TrashItem({ asset, onRestore }: TrashItemProps) {
         <View style={[styles.thumbnail, styles.placeholder]} />
       )}
       {asset.mediaType === MediaType.VIDEO && <Text style={styles.videoBadge}>▶</Text>}
-      <Pressable onPress={() => onRestore(asset.id)} style={styles.restoreButton} hitSlop={8}>
+      <Pressable
+        onPress={() => onRestore(asset.id)}
+        style={styles.restoreButton}
+        hitSlop={8}
+        accessibilityRole="button"
+        accessibilityLabel={asset.mediaType === MediaType.VIDEO ? "Restore video" : "Restore photo"}
+      >
         <Text style={styles.restoreIcon}>↺</Text>
       </Pressable>
     </View>

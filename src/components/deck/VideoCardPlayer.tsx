@@ -29,7 +29,13 @@ export function VideoCardPlayer({ uri }: VideoCardPlayerProps) {
   return (
     <>
       <VideoView style={styles.media} player={player} contentFit="contain" nativeControls={false} />
-      <Pressable style={styles.muteButton} onPress={() => setMuted((m) => !m)} hitSlop={12}>
+      <Pressable
+        style={styles.muteButton}
+        onPress={() => setMuted((m) => !m)}
+        hitSlop={12}
+        accessibilityRole="button"
+        accessibilityLabel={muted ? "Unmute video" : "Mute video"}
+      >
         <Text style={styles.muteIcon}>{muted ? "🔇" : "🔊"}</Text>
       </Pressable>
     </>

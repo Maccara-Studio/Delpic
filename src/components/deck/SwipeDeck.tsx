@@ -64,7 +64,7 @@ export function SwipeDeck() {
     return (
       <View style={styles.center}>
         <Text style={styles.errorText}>Couldn&apos;t load your photos. Check your connection and try again.</Text>
-        <Pressable onPress={retryLoad} style={styles.retryButton}>
+        <Pressable onPress={retryLoad} style={styles.retryButton} accessibilityRole="button">
           <Text style={styles.retryButtonText}>Retry</Text>
         </Pressable>
       </View>
@@ -87,7 +87,11 @@ export function SwipeDeck() {
         <Ionicons name="checkmark-circle" size={48} color="#22c55e" />
         <Text style={styles.stateTitle}>You&apos;ve reviewed everything!</Text>
         {stagedCount > 0 && (
-          <Pressable onPress={() => router.push("/(tabs)/trash")} style={styles.retryButton}>
+          <Pressable
+            onPress={() => router.push("/(tabs)/trash")}
+            style={styles.retryButton}
+            accessibilityRole="button"
+          >
             <Text style={styles.retryButtonText}>Review Trash ({stagedCount})</Text>
           </Pressable>
         )}
@@ -114,7 +118,13 @@ export function SwipeDeck() {
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
       <View style={styles.header}>
         {canUndo ? (
-          <Pressable onPress={undo} style={styles.backButton} hitSlop={12}>
+          <Pressable
+            onPress={undo}
+            style={styles.backButton}
+            hitSlop={12}
+            accessibilityRole="button"
+            accessibilityLabel="Undo last swipe"
+          >
             <Ionicons name="arrow-undo" size={20} color="#fff" />
           </Pressable>
         ) : (
