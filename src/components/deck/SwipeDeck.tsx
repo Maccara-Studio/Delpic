@@ -1,10 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import { useCallback, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useCardStack } from "@/hooks/useCardStack";
 import type { SwipeDirection } from "@/store/slices/sessionSlice";
+import { useAppStore } from "@/store/useAppStore";
 import type { ReviewableAsset } from "@/types/media";
 
 import { ProgressBar } from "./ProgressBar";
@@ -22,12 +24,15 @@ export function SwipeDeck() {
     isLoading,
     isEmpty,
     isDeckFinished,
+    hasLoadError,
+    retryLoad,
     reviewedCount,
     loadedCount,
     canUndo,
     completeSwipe,
     undo,
   } = useCardStack();
+  const stagedCount = useAppStore((s) => s.stagedAssets.length);
 
   // Cards that have already been swiped (and thus dropped out of `visibleAssets`) but are
   // still visually flying off screen. Kept mounted here — same component instance, same key,
@@ -55,10 +60,23 @@ export function SwipeDeck() {
     );
   }
 
+  if (hasLoadError) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.errorText}>Couldn&apos;t load your photos. Check your connection and try again.</Text>
+        <Pressable onPress={retryLoad} style={styles.retryButton}>
+          <Text style={styles.retryButtonText}>Retry</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
   if (isEmpty) {
     return (
       <View style={styles.center}>
-        <Text>No photos or videos found.</Text>
+        <Ionicons name="images-outline" size={48} color="#9ca3af" />
+        <Text style={styles.stateTitle}>No photos or videos found</Text>
+        <Text style={styles.stateSubtitle}>Your camera roll appears to be empty.</Text>
       </View>
     );
   }
@@ -66,7 +84,13 @@ export function SwipeDeck() {
   if (isDeckFinished && exitingAssets.length === 0) {
     return (
       <View style={styles.center}>
-        <Text>You&apos;ve reviewed everything! 🎉</Text>
+        <Ionicons name="checkmark-circle" size={48} color="#22c55e" />
+        <Text style={styles.stateTitle}>You&apos;ve reviewed everything!</Text>
+        {stagedCount > 0 && (
+          <Pressable onPress={() => router.push("/(tabs)/trash")} style={styles.retryButton}>
+            <Text style={styles.retryButtonText}>Review Trash ({stagedCount})</Text>
+          </Pressable>
+        )}
       </View>
     );
   }
@@ -122,6 +146,32 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
+    gap: 12,
+    paddingHorizontal: 32,
+  },
+  errorText: {
+    textAlign: "center",
+    color: "#6b7280",
+  },
+  stateTitle: {
+    fontSize: 17,
+    fontWeight: "600",
+    textAlign: "center",
+  },
+  stateSubtitle: {
+    fontSize: 14,
+    color: "#6b7280",
+    textAlign: "center",
+  },
+  retryButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 24,
+    borderRadius: 10,
+    backgroundColor: "#111",
+  },
+  retryButtonText: {
+    color: "#fff",
+    fontWeight: "600",
   },
   header: {
     height: 52,

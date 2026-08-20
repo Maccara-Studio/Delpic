@@ -12,6 +12,7 @@ export function useCardStack() {
 
   const [assets, setAssets] = useState<ReviewableAsset[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const hasNextPageRef = useRef(true);
   const isFetchingRef = useRef(false);
 
@@ -22,6 +23,11 @@ export function useCardStack() {
       const { assets: page, hasNextPage } = await fetchAssetsPage({ offset: assets.length });
       hasNextPageRef.current = hasNextPage;
       setAssets((prev) => [...prev, ...page]);
+      setLoadError(false);
+    } catch {
+      // Leave hasNextPageRef untouched so the next prefetch trigger (or an explicit retry)
+      // attempts this same page again instead of silently giving up on the rest of the library.
+      setLoadError(true);
     } finally {
       isFetchingRef.current = false;
       setIsLoading(false);
@@ -88,8 +94,10 @@ export function useCardStack() {
   return {
     visibleAssets,
     isLoading,
-    isEmpty: !isLoading && assets.length === 0,
+    isEmpty: !isLoading && !loadError && assets.length === 0,
     isDeckFinished: !isLoading && assets.length > 0 && cursorIndex >= assets.length,
+    hasLoadError: loadError && assets.length === 0,
+    retryLoad: loadNextPage,
     reviewedCount: cursorIndex,
     loadedCount: assets.length,
     canUndo,
