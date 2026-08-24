@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
+import { SplashView } from "@/components/common/SplashView";
 import { useAppStore } from "@/store/useAppStore";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -17,14 +18,15 @@ export default function RootLayout() {
     return useAppStore.persist.onFinishHydration(() => setHasHydrated(true));
   }, [hasHydrated]);
 
+  // Hide the native OS splash (a small icon Android forces on us, no way around it) as soon as
+  // JS is running, and hand off immediately to our own full-screen SplashView — which we fully
+  // control — while the store finishes hydrating underneath it.
   useEffect(() => {
-    if (hasHydrated) {
-      SplashScreen.hideAsync().catch(() => {});
-    }
-  }, [hasHydrated]);
+    SplashScreen.hideAsync().catch(() => {});
+  }, []);
 
   if (!hasHydrated) {
-    return null;
+    return <SplashView />;
   }
 
   return (

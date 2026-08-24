@@ -109,6 +109,12 @@ Chronological record of what was done per milestone and the key problems hit alo
 
 ---
 
+## Milestone 8 — Monetization (RevenueCat)
+
+**Deferred.** Not started — the user isn't sure yet whether a paid model is worth pursuing, and didn't want to commit to an Apple Developer account (99$/yr) before validating the app with real users. Revisit once there's evidence the app is worth monetizing. See Milestones 9/10 for the polish work done instead while this stays on hold.
+
+---
+
 ## Milestone 9 — Settings + bug fixes
 
 **Built:** Real toggles for `autoplayVideos`/`muteByDefault` in Settings (was dead state with no UI), bumped `MAX_UNDO_HISTORY` 10 → 30. Dropped the `hapticsEnabled` setting and the Tip Jar entry point entirely — not worth building ahead of Milestone 8.
@@ -129,3 +135,19 @@ Chronological record of what was done per milestone and the key problems hit alo
 **Skipped:** Dark mode (not wanted) and swipe-gesture accessibility actions (the core task is inherently visual — a screen reader user can't judge a photo they can't see, so the effort didn't justify touching the recently-stabilized gesture code). Production EAS profile was already correct as scaffolded (defaults to `.aab` + `autoIncrement`); `eas submit` credentials are blocked on the Play Console account.
 
 **Status:** No more dead-end screens; permission, load-failure, and empty/finished states all have a way forward. ✅
+
+---
+
+## Tooling — splash screen
+
+**Built:**
+- `README.md` restructured product-first (pitch, features, status, license) with the existing dev setup moved under a `## Development` section; `LICENSE` (all rights reserved) and `PRIVACY.md` added.
+- Play Store 512×512 icon generated from the existing source design.
+
+**Fixed:**
+- `git push`/`eas login` failing with an SSL error → same Norton HTTPS interception as PREREQUISITES.md already documents for Gradle, just hitting git this time → `git config http.sslBackend schannel` to use Windows' own trusted cert store instead of git's bundled CA bundle.
+- The splash screen had never actually been configured despite `expo-splash-screen` being in `plugins` — `assets/splash-icon.png` turned out to be the unused Expo template placeholder (concentric circles), not a real asset.
+- First attempt (reusing `icon.png`, centered, small) showed pale streaks at its rounded corners — same root cause as the M6.5 adaptive-icon seam bug, just visible again at a different size/background. Fixed by cropping a border-free version of the artwork (`splash-mark.png`) for that fallback use.
+- Tried a full-bleed gradient + wordmark splash image next — discovered Android 12+ hard-locks the native splash screen to a small centered icon on a solid background; there is no config option to make a native splash cover the full screen. Ended up building a custom in-app splash (`SplashView`, `expo-linear-gradient`) that takes over immediately once JS starts, giving full control over layout, with the native icon/background color chosen to blend into it for a seamless handoff.
+
+**Status:** Repo is clean and rebranded, Play Store prerequisites are lined up except for account verification, splash screen shows the intended full-screen design via the custom JS splash. ✅

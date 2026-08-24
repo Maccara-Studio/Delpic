@@ -3,8 +3,8 @@ import type { ExpoConfig } from "expo/config";
 const config: ExpoConfig = {
   name: "Delpic",
   slug: "delpic",
-  owner: "sam84723s-team",
-  version: "1.1.3",
+  owner: "maccarastudio",
+  version: "1.1.4",
   scheme: "delpic",
   orientation: "portrait",
   icon: "./assets/icon.png",
@@ -30,14 +30,22 @@ const config: ExpoConfig = {
   },
   extra: {
     eas: {
-      projectId: "a0454b58-77c4-4572-933c-c844a3421bef",
+      projectId: "9fa2d4ce-ecca-4e30-9694-d49a45365a2c",
     },
   },
   plugins: [
     "expo-router",
     "expo-status-bar",
     "expo-image",
-    "expo-splash-screen",
+    [
+      "expo-splash-screen",
+      {
+        image: "./assets/splash-mark.png",
+        imageWidth: 200,
+        resizeMode: "contain",
+        backgroundColor: "#DE6461",
+      },
+    ],
     "expo-video",
     "expo-font",
     [
